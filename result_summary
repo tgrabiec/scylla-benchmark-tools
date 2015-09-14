@@ -1,0 +1,178 @@
+#!/usr/bin/env python
+import os
+import numpy
+import sys
+import glob
+import subprocess
+import argparse
+
+warmup_seconds = 60
+cooldown_seconds = 15
+
+#
+# Example of out*.log:
+#
+# Sleeping 2s...
+# Warming up WRITE with 50000 iterations...
+# Running WRITE with 700 threads 10 hours
+# type,      total ops,    op/s,    pk/s,   row/s,    mean,     med,     .95,     .99,    .999,     max,   time,   stderr, errors,  gc: #,  max ms,  sum ms,  sdv ms,      mb
+# total,        110596,  107539,  107539,  107539,     5.4,     2.0,    12.4,    85.1,   330.6,   370.0,    1.0,  0.00000,      0,      0,       0,       0,       0,       0
+# total,        336372,  182556,  182556,  182556,     3.9,     2.6,     7.8,    27.9,   180.2,   509.8,    2.3,  0.18285,      0,      0,       0,       0,       0,       0
+# total,        543909,  186717,  186717,  186717,     3.7,     3.0,     6.9,    21.6,    49.3,    86.4,    3.4,  0.13217,      0,      0,       0,       0,       0,       0
+# total,        750954,  198586,  198586,  198586,     3.5,     2.9,     6.3,    13.1,    57.5,    60.5,    4.4,  0.11171,      0,      0,       0,       0,       0,       0
+# total,        944556,  186071,  186071,  186071,     3.7,     3.1,     7.5,    15.9,    40.8,    71.4,    5.5,  0.08913,      0,      0,       0,       0,       0,       0
+def process_cassandra_stress_logs(id):
+    all_vm_tps = 0
+    all_vm_ops = 0
+    n_clients = 0
+
+    print('=== cassandra-stress clients ===')
+
+    for path in glob.glob("results/%s/*/out*.log" % id):
+        total_ops = 0
+        total_ops_sq = 0
+        count = 0
+        time = 0
+        prev = 0
+        hot_start = 0
+        name = path.split('/')[2]
+        n_clients += 1
+        total_start = None
+        errors = 0
+        with open(path, "r") as f:
+            for line in f:
+                if line.startswith('total,'):
+                    columns = line.split()
+                    time = float(columns[11].rstrip(','))
+                    if time > warmup_seconds:
+                        if not hot_start:
+                            total_start = int(columns[1].rstrip(','))
+                            hot_start = time
+                        ops = float(columns[2].rstrip(',')) * (time - prev)
+                        errors += int(columns[13].rstrip(','))
+                        total_ops += ops
+                        total_ops_sq += ops*ops
+                        count += 1
+                    prev = time
+        hot_duration = max(0, time - hot_start)
+        if total_start and hot_duration:
+            total_end = int(columns[1].rstrip(','))
+            avg_from_total = (total_end - total_start)/hot_duration
+            avg = avg_from_total
+            all_vm_tps += avg
+            all_vm_ops += total_ops
+            stddev = (total_ops_sq/count - avg*avg)**0.5
+            print("%s: duration=%d [s], warmed_up=%d [s] (%d [min]), tps=%d, errors=%d stddev=%f"
+                % (name, time, hot_duration, hot_duration / 60, int(avg), errors, stddev))
+        else:
+            print("%s: test too short (%d [s])" % (name, time))
+    print('total operations = %d' % (all_vm_ops))
+    print('average throughput = %d tps' % (all_vm_tps))
+
+# Generates (time, value) tuples read from a whisper file
+# Note that 'time' may wrap around
+def read_whisper(path):
+    p = subprocess.Popen(["""whisper-dump.py %s | sed '1,/data/d' | awk '{print $2 $3}' | tr ',' ' '""" % path], shell=True, stdout=subprocess.PIPE)
+    out,err = p.communicate()
+    for line in out.split("\n"):
+        tokens = line.split()
+        if len(tokens) == 2:
+            if int(tokens[0]): # Skip missing values
+                yield (int(tokens[0]), float(tokens[1]))
+
+def time_bounds_of_last_run(path):
+    start_time = None
+    end_time = None
+    last_time = None
+
+    samples = list(reversed(sorted(read_whisper(path))))
+
+    for t, val in samples:
+        if val:
+            if not end_time:
+                end_time = t
+        else:
+            if end_time and not start_time:
+                start_time = t
+                break
+        last_time = t
+
+    if not start_time:
+        start_time = last_time
+
+    return (start_time, end_time)
+
+
+def process_whisper(id):
+    start_time = None
+    end_time = None
+    last_time = None
+    values = []
+
+    print('=== whisper statistics ===')
+
+    cassandra_whisper_file = 'results/%s/whisper/cassandra/total_operations-all.wsp' % id
+    scylla_whisper_file = 'results/%s/whisper/transport/total_requests_served.wsp' % id
+    whisper_file = None
+
+    # Pick scylla or cassandra depending on which has the most recent load
+    for file_name in [scylla_whisper_file, cassandra_whisper_file]:
+        new_start_time, new_end_time = time_bounds_of_last_run(file_name)
+        if new_end_time and (not whisper_file or new_end_time > end_time):
+            whisper_file = file_name
+            start_time = new_start_time
+            end_time = new_end_time
+
+    if not end_time:
+        print('No load?')
+        return
+
+    duration = end_time - start_time + 1
+
+    start_time += warmup_seconds
+    end_time -= cooldown_seconds
+
+    print('Using %s, time range: %d-%d (warmup=%d cooldown=%d)' % (whisper_file, start_time, end_time, warmup_seconds, cooldown_seconds))
+
+    sampling_periods = []
+    last_time = None
+
+    for t, val in sorted(read_whisper(whisper_file)):
+        if t >= start_time and t <= end_time:
+            if last_time:
+                sampling_periods.append(t - last_time)
+            last_time = t
+            values.append(val)
+
+    warm_duration = max(0, end_time - start_time + 1)
+    print("Duration from whisper: %d [s] (%d warmed up)" % (duration, warm_duration))
+
+    if not values:
+        print("No warm values")
+    else:
+        sampling_periods = sorted(sampling_periods)
+        if sampling_periods[-1] == sampling_periods[0]:
+            print("Sampling period: %d [s]" % sampling_periods[0])
+        else:
+            print("Sampling period: %d-%s [s]" % (sampling_periods[0], sampling_periods[-1]))
+        print("Throughput:\n  min:%13.3f\n  max:%13.3f\n  avg:%13.3f\n  std:%13.3f" % (min(values), max(values), sum(values)/len(values), numpy.std(values)))
+
+def dump_throughput(id):
+    cassandra_whisper_file = 'results/%s/whisper/cassandra/total_operations-all.wsp' % id
+    scylla_whisper_file = 'results/%s/whisper/transport/total_requests_served.wsp' % id
+
+    for t, val in sorted(read_whisper(cassandra_whisper_file)):
+        print t, val
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Result summarizer")
+    parser.add_argument('--warmup',  default=60, action="store", type=int, help="Warmup period in seconds")
+    parser.add_argument('id', help="Result id")
+    args = parser.parse_args()
+
+    warmup_seconds = args.warmup
+
+    id = args.id
+    process_cassandra_stress_logs(id)
+    process_whisper(id)
+    #dump_throughput(id)

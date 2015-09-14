@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+# Rename to config.sh
+
+CASSANDRA_VERSION=2.1.9
+
+# Space-separated list of client names
+CLIENTS=
+
+CLIENT_USER=root
+CLIENT_HOME=/root
+
+# Name of server on which master monitoring services will run
+# You need to set ${COLLECTD_HOST}_SERVER_INTERNAL_IP and ${COLLECTD_HOST}_SERVER_EXTERNAL_IP
+COLLECTD_HOST=
+
+# Space-separated server names (running scylla/cassandra).
+# For each name X, also define X_SERVER_INTERNAL_IP and X_SERVER_INTERNAL_IP.
+SERVERS=
+
+SERVER_NIC=int0
+SERVER_USER=root
+SERVER_HOME=/root
+
+XXX_SERVER_INTERNAL_IP=
+XXX_SERVER_EXTERNAL_IP=
+
+# Whether to start Scylla and Cassandra in chroot. 'y' or 'n'
+# Warning: setup.sh currently doesn't setup inside chroot
+RUN_IN_CHROOT=n
+
+KEY_OPTS='-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+SSH_OPTS="-tt $KEY_OPTS"
+SCP_OPTS=$KEY_OPTS

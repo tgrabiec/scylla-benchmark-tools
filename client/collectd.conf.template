@@ -1,0 +1,8 @@
+LoadPlugin network
+LoadPlugin interface
+LoadPlugin netlink
+
+<Plugin "network">
+    Listen "127.0.0.1" "25826"
+   	Server "$(server_internal_ip $COLLECTD_HOST)" "25827"
+</Plugin>
