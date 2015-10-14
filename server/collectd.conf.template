@@ -11,7 +11,7 @@ Interval 1
 
 <Plugin "network">
     Listen "127.0.0.1" "25826"
-   	Server "$(server_external_ip $COLLECTD_HOST)" "25827"
+   	Server "$COLLECTD_HOST_INTERNAL_IP" "25827"
 </Plugin>
 <Plugin exec>
   Exec "collectd" "/usr/share/collectd/plugins/cassandra-stats.sh" "${SERVER_INTERNAL_IP}"

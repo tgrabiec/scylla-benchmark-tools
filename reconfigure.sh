@@ -24,6 +24,11 @@ for name in $SERVERS; do
     fi
     scp $SCP_OPTS server/cassandra.yaml $SERVER_USER@$(server_external_ip $name):$cassandra_conf_dst
 
+    t=$(mktemp)
+    export COLLECTD_HOST_INTERNAL_IP=$(server_external_ip $COLLECTD_HOST)
+    ./fill-template.sh server/collectd.conf.template > $t
+    scp $SCP_OPTS $t $SERVER_USER@$(server_external_ip $name):${SERVER_HOME}/collectd.conf
+
     unset SERVER_INTERNAL_IP
     unset SEEDS
     unset CONCURRENT_WRITES

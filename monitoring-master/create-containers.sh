@@ -9,6 +9,7 @@ sudo docker create \
   -p $(server_internal_ip $COLLECTD_HOST):2003:2003 \
   -p 127.0.0.1:2003:2003 \
   -p $(server_internal_ip $COLLECTD_HOST):8125:8125/udp \
+  -p 127.0.0.1:8125:8125/udp \
   hopsoft/graphite-statsd
 
 graphite_conf_dir=$(./get-graphite-conf-dir.sh)
@@ -21,6 +22,6 @@ cp -f graphite/local_settings.py $graphite_conf_dir/webapp/graphite
 docker create \
  -p 127.0.0.1:8080:80 \
  --name tessera \
- -e GRAPHITE_URL=http://$(server_internal_ip $COLLECTD_HOST) \
+ -e GRAPHITE_URL=http://127.0.0.1 \
  -it \
  aalpern/tessera-simple
