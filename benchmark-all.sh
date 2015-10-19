@@ -15,15 +15,15 @@ function run_all {
 
     local date=$(date +%Y-%m-%d-%T)
 
-   echo "=== Starting write-only benchmark ==="
-  ./restart-$SERVER-fresh.sh
-  ./start-write.sh
-  collect $SERVER-write-rf$RF-cl-$CL-$date
+    echo "=== Starting write-only benchmark ==="
+    ./restart-$SERVER-fresh.sh
+    ./start-write.sh
+    collect $SERVER-write-rf$RF-cl-$CL-$date
 
-   echo "=== Starting read-only benchmark ==="
-   ./restart-$SERVER-fresh.sh
-   ./start-read.sh
-   collect $SERVER-read-rf$RF-cl-$CL-$date
+    echo "=== Starting read-only benchmark ==="
+    ./restart-$SERVER-fresh.sh
+    ./start-read.sh
+    collect $SERVER-read-rf$RF-cl-$CL-$date
 
     echo "=== Starting mixed benchmark ==="
     ./restart-$SERVER-fresh.sh
