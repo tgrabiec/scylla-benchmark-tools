@@ -16,7 +16,7 @@ if [[ is_xen && $(n_cpus) != $(n_tx_queues $SERVER_NIC) ]]; then
 fi
 
 cmd="scylla $SCYLLA_OPTS --data-file-directories=/var/lib/scylla/data --commitlog-directory=/var/lib/scylla/commitlog
-    --collectd=1 --collectd-address=$(server_internal_ip $COLLECTD_HOST):25827 --collectd-poll-period 3000 --collectd-host=\"$(hostname)\"
+    --collectd=1 --collectd-address=$(server_internal_ip $COLLECTD_HOST):25826 --collectd-poll-period 3000 --collectd-host=\"$(hostname)\"
     --log-to-syslog=1 --log-to-stdout=1 -m80G --options-file=./scylla.yaml"
 
 if $(run_in_chroot); then
