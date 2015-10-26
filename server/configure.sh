@@ -5,6 +5,7 @@
 NR_HUGEPAGES=128
 NR_CPUS=$(n_cpus)
 NIC=${SERVER_NIC:-eth0}
+DISK=${SERVER_DISK:-sda}
 
 # First IRQ of given NIC
 function first_irq() {
@@ -122,6 +123,6 @@ echo 4096 > /proc/sys/net/ipv4/tcp_max_syn_backlog
 
 echo tsc > /sys/devices/system/clocksource/clocksource0/current_clocksource
 
-echo deadline > /sys/block/sda/queue/scheduler
-echo 8 > /sys/class/block/sda/queue/read_ahead_kb
-echo 0 > /sys/class/block/sda/queue/rotational
+echo deadline > /sys/block/$DISK/queue/scheduler
+echo 8 > /sys/class/block/$DISK/queue/read_ahead_kb
+echo 0 > /sys/class/block/$DISK/queue/rotational
