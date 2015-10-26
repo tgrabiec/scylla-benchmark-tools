@@ -9,6 +9,8 @@ LoadPlugin cpu
 
 Interval 1
 
+Hostname $M1_TOOLS_HOSTNAME
+
 <Plugin "network">
     Listen "127.0.0.1" "25826"
    	Server "$COLLECTD_HOST_INTERNAL_IP" "25826"

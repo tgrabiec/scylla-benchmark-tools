@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-. ~/vocabulary.sh
+. ./vocabulary.sh
 
 sudo yum install -y collectd collectd-write_riemann collectd-netlink
 sudo yum install -y psmisc sysstat lsof perf tcpdump tcpreplay git net-tools

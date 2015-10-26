@@ -33,7 +33,7 @@ function wait_add {
 function scp_clients {
     wait_begin
     for name in $CLIENTS; do
-        scp $SCP_OPTS $@ $CLIENT_USER@$name:$CLIENT_HOME &
+        scp $SCP_OPTS $@ $CLIENT_USER@$(server_external_ip $name):$CLIENT_HOME &
         wait_add $!
     done
     wait_join
@@ -41,14 +41,14 @@ function scp_clients {
 
 function invoke_on_clients {
     for name in $CLIENTS; do
-        ssh $SSH_OPTS $CLIENT_USER@$name $@
+        ssh $SSH_OPTS $CLIENT_USER@$(server_external_ip $name) $@
     done
 }
 
 function invoke_on_clients_parallel {
     wait_begin
     for name in $CLIENTS; do
-        ssh $SSH_OPTS $CLIENT_USER@$name $@ &
+        ssh $SSH_OPTS $CLIENT_USER@$(server_external_ip $name) $@ &
         wait_add $!
     done
     wait_join

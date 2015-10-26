@@ -6,7 +6,7 @@ set -e
 function setup_client {
     name=$1
     echo "Setting up $name"
-    ssh $SSH_OPTS $CLIENT_USER@$name ./setup.sh
+    ssh $SSH_OPTS $CLIENT_USER@$(server_external_ip $name) ./setup.sh
 }
 
 wait_begin

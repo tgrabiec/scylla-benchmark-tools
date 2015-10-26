@@ -20,7 +20,7 @@ wait_begin
 for name in $CLIENTS; do
     range=$RANGE_START..$((RANGE_START + PER_CLIENT))
     echo "$name: $range"
-    ssh $SSH_OPTS $CLIENT_USER@$name ./populate-keys.sh $RANGE_START $PER_CLIENT &
+    ssh $SSH_OPTS $CLIENT_USER@$(server_external_ip $name) ./populate-keys.sh $RANGE_START $PER_CLIENT &
     wait_add $!
     ((RANGE_START += PER_CLIENT))
 done

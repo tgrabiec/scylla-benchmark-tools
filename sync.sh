@@ -15,4 +15,4 @@ echo "Syncing clients..."
 ./scp-clients.sh $CLIENT_FILES
 
 echo "Syncing monitornig master..."
-scp -r $SCP_OPTS $CLIENT_FILES monitoring-master/* $CLIENT_USER@$(server_external_ip $COLLECTD_HOST):/root
+scp -r $SCP_OPTS $CLIENT_FILES monitoring-master/* $CLIENT_USER@$(server_external_ip $COLLECTD_HOST):$CLIENT_HOME

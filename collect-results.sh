@@ -36,7 +36,7 @@ fetch_whisper_file transport/total_requests_served
 wait_begin
 for name in $CLIENTS; do
     mkdir -p $dir/$name
-    scp $SCP_OPTS $CLIENT_USER@$name:$CLIENT_HOME/out-1.log $dir/$name/out-1.log || echo "scp failed from $name" &
+    scp $SCP_OPTS $CLIENT_USER@$(server_external_ip $name):$CLIENT_HOME/out-1.log $dir/$name/out-1.log || echo "scp failed from $name" &
     wait_add $!
 done
 wait_join

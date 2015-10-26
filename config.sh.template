@@ -5,6 +5,7 @@
 CASSANDRA_VERSION=2.1.9
 
 # Space-separated list of client names
+# For each name X, also define X_SERVER_EXTERNAL_IP.
 CLIENTS=
 
 CLIENT_USER=root
@@ -15,7 +16,7 @@ CLIENT_HOME=/root
 COLLECTD_HOST=
 
 # Space-separated server names (running scylla/cassandra).
-# For each name X, also define X_SERVER_INTERNAL_IP and X_SERVER_INTERNAL_IP.
+# For each name X, also define X_SERVER_EXTERNAL_IP and X_SERVER_INTERNAL_IP.
 SERVERS=
 
 SERVER_NIC=int0
