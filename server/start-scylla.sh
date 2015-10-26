@@ -13,10 +13,11 @@ NAME=${$NAME:-$(hostname)}
 
 if [[ is_xen && $(n_cpus) != $(n_tx_queues $SERVER_NIC) ]]; then
     # Leave CPU0 for softirq processing, otherwise performance will suffer
+    echo "Excluding CPU0"
     SCYLLA_OPTS="$SCYLLA_OPTS --cpuset 1-$(($(n_cpus) - 1))"
 fi
 
-cmd="scylla $SCYLLA_OPTS --data-file-directories=/var/lib/scylla/data --commitlog-directory=/var/lib/scylla/commitlog
+cmd="scylla $SCYLLA_OPTS --data-file-directories=$DATA_DIR/data --commitlog-directory=$DATA_DIR/commitlog
     --collectd=1 --collectd-address=$(server_internal_ip $COLLECTD_HOST):25826 --collectd-poll-period 3000 --collectd-host=\"$NAME\"
     --log-to-syslog=1 --log-to-stdout=1 --options-file=./scylla.yaml"
 
