@@ -6,5 +6,5 @@ set -e
 ./sync.sh
 ./setup-clients.sh
 ./setup-servers.sh
-./setup_monitoring.sh
+./setup-monitoring.sh
 ./reconfigure.sh
