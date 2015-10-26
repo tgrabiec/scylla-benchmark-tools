@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+. ./vocabulary.sh
+
+name=$1
+if is_client $name || is_metrics $name; then
+    ssh $SSH_OPTS $CLIENT_USER@$(server_external_ip $name)
+elif is_server $name; then
+    ssh $SSH_OPTS $SERVER_USER@$(server_external_ip $name)
+fi

@@ -120,3 +120,30 @@ function run_in_chroot {
         return 1
     fi
 }
+
+function is_server {
+    local name=$1
+    if [[ $SERVERS == *"$name"* ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function is_client {
+    local name=$1
+    if [[ $CLIENTS == *"$name"* ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function is_metrics {
+    local name=$1
+    if [ $COLLECTD_HOST == "$name" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
